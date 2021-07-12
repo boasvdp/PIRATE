@@ -147,7 +147,7 @@ while(<GC>){
 		# define group values
 		my $group = $l[1];
 		my $no_genomes = $l[6];
-		my $dosage = $l[7]; # max dosage
+		my $dosage = $l[9]; # max dosage, CHANGED FROM AVERAGE DOSE TO MAX DOSE
 		my $per_genomes = ($no_genomes / $total_genomes) * 100;
 		
 		# filter on thresholds
@@ -387,73 +387,73 @@ for my $genome ( @genomes ){
 for my $l_check ( sort keys %loci_group ){
 	die " - ERROR: No sequence found for $l_check.\n" unless $stored_loci {$l_check};
 }
-
-# Align aa/nucleotide sequence using mafft in parallel - back-translate if amino acid sequence.
-print " - aligning group sequences using MAFFT\n" if $quiet == 0;
-
-# Create temp files for parallel.
-my $temp = "$output_dir/temp.tab";
-open TEMP, ">$temp" or die $!;
-	
-# Variables
-my $processed = 0; 
-my $increment = int( $no_groups/10 );
-my $curr_increment = $increment;
-my $arg_count = 0;
-
-# set feedback message
-print " - 0 % aligned" if $quiet == 0;
-
-# batch files in parallel
-for my $cluster( keys %group_list ){
-	
-	# Increment variables;
-	++$processed;
-	++$arg_count;
-	
-	# Print to temp file.
-	if ($nucleotide == 0){
-			print TEMP "$output_dir/$cluster.fasta\t$output_dir\n"; ## MAFFT
-	}
-	else{
-			print TEMP "$output_dir/$cluster.fasta\t$output_dir/$cluster.nucleotide.fasta\n";
-	}
-	# When processed = increment or all samples are processed then align the files stored in temp files. 
-	if( ($arg_count == $increment ) || ( $processed == $no_groups ) ){ 
-	
-		close TEMP;
-	
-		# align amino acid sequence and reverse translate to nucleotide sequence. 
-		if ($nucleotide == 0){
-			`parallel -a $temp --jobs $threads --colsep '\t' perl $script_path/aa_align_to_nucleotide.pl {1} {2}`; # >/dev/null 2>/dev/null
-			print " - ERROR: aa_align_to_nucleotide.pl threw an error after $processed samples\n" if $?;
-		}
-		# align nucleotide sequence. 		
-		else{
-			`parallel -a $temp --jobs $threads --colsep '\t' perl $script_path/align_nucleotide_sequences.pl {1} {2}`; # >/dev/null 2>/dev/null
-			print " - ERROR: align_nucleotide_sequences.pl threw an error after $processed samples\n" if $?; 
-		}
-		
-		# Clear temp files.
-		open TEMP, ">$temp" or die $!;
-	
-		# Reset variables and modify progress bar.
-		$arg_count = 0; 
-		if( $processed > $curr_increment ){ 
-			$curr_increment += $increment;		
-			print "\r - ",  int(($processed/$no_groups)*100), " % aligned" if $quiet == 0;
-		}		
-
-	}
-}
-close TEMP;
-
-# Tidy up
-print "\r - 100 % aligned\n" if $quiet == 0;
-unlink $temp;
-for my $cluster( keys %group_list ){
-	unlink "$output_dir/$cluster.fasta";
-	unlink "$output_dir/$cluster.nucleotide.fasta.temp" if $nucleotide == 1;
-}
+#
+## Align aa/nucleotide sequence using mafft in parallel - back-translate if amino acid sequence.
+#print " - aligning group sequences using MAFFT\n" if $quiet == 0;
+#
+## Create temp files for parallel.
+#my $temp = "$output_dir/temp.tab";
+#open TEMP, ">$temp" or die $!;
+#	
+## Variables
+#my $processed = 0; 
+#my $increment = int( $no_groups/10 );
+#my $curr_increment = $increment;
+#my $arg_count = 0;
+#
+## set feedback message
+#print " - 0 % aligned" if $quiet == 0;
+#
+## batch files in parallel
+#for my $cluster( keys %group_list ){
+#	
+#	# Increment variables;
+#	++$processed;
+#	++$arg_count;
+#	
+#	# Print to temp file.
+#	if ($nucleotide == 0){
+#			print TEMP "$output_dir/$cluster.fasta\t$output_dir\n"; ## MAFFT
+#	}
+#	else{
+#			print TEMP "$output_dir/$cluster.fasta\t$output_dir/$cluster.nucleotide.fasta\n";
+#	}
+#	# When processed = increment or all samples are processed then align the files stored in temp files. 
+#	if( ($arg_count == $increment ) || ( $processed == $no_groups ) ){ 
+#	
+#		close TEMP;
+#	
+#		# align amino acid sequence and reverse translate to nucleotide sequence. 
+#		if ($nucleotide == 0){
+#			`parallel -a $temp --jobs $threads --colsep '\t' perl $script_path/aa_align_to_nucleotide.pl {1} {2}`; # >/dev/null 2>/dev/null
+#			print " - ERROR: aa_align_to_nucleotide.pl threw an error after $processed samples\n" if $?;
+#		}
+#		# align nucleotide sequence. 		
+#		else{
+#			`parallel -a $temp --jobs $threads --colsep '\t' perl $script_path/align_nucleotide_sequences.pl {1} {2}`; # >/dev/null 2>/dev/null
+#			print " - ERROR: align_nucleotide_sequences.pl threw an error after $processed samples\n" if $?; 
+#		}
+#		
+#		# Clear temp files.
+#		open TEMP, ">$temp" or die $!;
+#	
+#		# Reset variables and modify progress bar.
+#		$arg_count = 0; 
+#		if( $processed > $curr_increment ){ 
+#			$curr_increment += $increment;		
+#			print "\r - ",  int(($processed/$no_groups)*100), " % aligned" if $quiet == 0;
+#		}		
+#
+#	}
+#}
+#close TEMP;
+#
+## Tidy up
+#print "\r - 100 % aligned\n" if $quiet == 0;
+#unlink $temp;
+#for my $cluster( keys %group_list ){
+#	unlink "$output_dir/$cluster.fasta";
+#	unlink "$output_dir/$cluster.nucleotide.fasta.temp" if $nucleotide == 1;
+#}
 
 exit
